@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 2, 6, 24;
+  --background-rgb: 248,242,190;
+  --background-end-rgb: 248,242,190;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255,255,255;
+    --background-start-rgb: 26, 38, 51; 
+    --background-end-rgb: 26, 38, 51 ;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      rgb(var(--background-start-rgb)),
+      rgb(var(--background-end-rgb))
+    );
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 20px #334D66 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
