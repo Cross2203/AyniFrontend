@@ -35,7 +35,7 @@ export default function LoginForm() {
         <div className="w-full">
           <div>
             <label
-              className="mb-3 mt-5 block text-xs font-medium text-white"
+              className="mb-3 mt-5 block text-xs font-medium"
               htmlFor="email"
             >
               Email
