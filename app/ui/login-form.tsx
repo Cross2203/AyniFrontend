@@ -1,6 +1,5 @@
 'use client';
 
-import { lusitana } from '@/app/ui/fonts';
 import {
   AtSymbolIcon,
   KeyIcon,
@@ -10,7 +9,6 @@ import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from './button';
 import { useAuth } from '@/app/context/authcontext'
 import { useState } from 'react';
-
 
 export default function LoginForm() {
   const { login, user, loading } = useAuth();
@@ -23,26 +21,27 @@ export default function LoginForm() {
     login(email, password);
   };
 
-  if (loading) return <p>Cargando...</p>;
+  if (loading) return <p className="text-primary text-center py-4">Cargando...</p>;
 
-  if (user) return <p>Bienvenido: {user.username}</p>;
+  if (user) return <p className="text-primary text-center py-4">Bienvenido: {user.username}</p>;
+
   return (
-    <form className="space-y-3 bg-first p-6" onSubmit={handleSubmit}>
+    <form className="max-w-md mx-auto space-y-3 bg-first p-6 rounded-lg shadow-lg" onSubmit={handleSubmit}>
       <div className="flex-1 rounded-lg bg-second px-6 pb-4 pt-8">
-        <h1 className={`${lusitana.className} mb-3 text-2xl`}>
-          Ingrese su usuario para continuar.
+        <h1 className={`mb-6 text-2xl text-primary text-center`}>
+          Ingrese sus credenciales
         </h1>
-        <div className="w-full">
+        <div className="w-full space-y-4">
           <div>
             <label
-              className="mb-3 mt-5 block text-xs font-medium"
+              className="mb-2 block text-sm font-medium text-primary"
               htmlFor="email"
             >
               Email
             </label>
             <div className="relative">
               <input
-                className="peer block w-full rounded-md border text-black border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
+                className="peer block w-full rounded-md border border-gray-300 py-2 pl-10 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
                 id="email"
                 type="email"
                 name="email"
@@ -50,19 +49,19 @@ export default function LoginForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+              <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 peer-focus:text-blue-500" />
             </div>
           </div>
-          <div className="mt-4">
+          <div>
             <label
-              className="mb-3 mt-5 block text-xs font-medium text-white"
+              className="mb-2 block text-sm font-medium text-primary"
               htmlFor="password"
             >
               Contraseña
             </label>
             <div className="relative">
               <input
-                className="peer block w-full rounded-md border border-gray-200 text-black py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
+                className="peer block w-full rounded-md border border-gray-300 py-2 pl-10 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
                 id="password"
                 type="password"
                 name="password"
@@ -71,7 +70,7 @@ export default function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 minLength={4}
               />
-              <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+              <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 peer-focus:text-blue-500" />
             </div>
           </div>
         </div>
@@ -86,8 +85,8 @@ export default function LoginForm() {
 
 function LoginButton() {
   return (
-    <Button className="mt-4 w-full hover:bg-blue" type="submit">
-      Ingresar <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
+    <Button className="mt-6 w-full bg-orange py-2 px-4 rounded-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105" type="submit">
+      Ingresar <ArrowRightIcon className="ml-2 h-5 w-5 inline" />
     </Button>
   );
 }
