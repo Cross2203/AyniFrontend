@@ -1,28 +1,22 @@
 'use client';
 
-import {
-  AtSymbolIcon,
-  KeyIcon,
-  ExclamationCircleIcon,
-} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+import { useAuth } from '@/app/context/authcontext';
+import { AtSymbolIcon, KeyIcon } from '@heroicons/react/24/outline';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from './button';
-import { useAuth } from '@/app/context/authcontext'
-import { useState } from 'react';
 
 export default function LoginForm() {
   const { login, user, loading } = useAuth();
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(email, password);
     login(email, password);
   };
 
   if (loading) return <p className="text-primary text-center py-4">Cargando...</p>;
-
   if (user) return <p className="text-primary text-center py-4">Bienvenido: {user.username}</p>;
 
   return (

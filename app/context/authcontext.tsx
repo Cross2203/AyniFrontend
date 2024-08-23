@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import api from '../lib/axiosConfig';
 import axios from 'axios';
-import { getCSRFToken } from '../utils/getCSRFToken';
 
 interface User {
   email: string;
@@ -13,36 +13,32 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const checkUserLoggedIn = async () => {
       try {
-        const csrfToken = getCSRFToken();    
-        console.log(csrfToken);
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user`, {
-          withCredentials: true, 
-        });
-        if (response.status === 200) {
-          console.log('User logged in');
-          setUser(response.data.user);
-          console.log(user);
-        } else if (response.status === 403) {
-          setUser(null);
-        }
+        console.log('Checking user login status...');
+        const response = await api.get<{ user: User }>('/user');
+        console.log('User login response:', response.data);
+        setUser(response.data.user);
       } catch (error) {
-        console.error('Error checking if user is logged in:', error);
-        router.push('/');
+        console.error('Error checking user login status:', error);
+        if (axios.isAxiosError(error)) {
+          console.log('Response status:', error.response?.status);
+          console.log('Response data:', error.response?.data);
+        }
         setUser(null);
       } finally {
-        console.log(user);
         setLoading(false);
       }
     };
@@ -52,57 +48,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/login`,
-        { email, password },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        }
-      );
-      if (response.status === 200) {
-        setUser(response.data.user);
-        console.log('Login successful:', response.data);
-        router.push('/dashboard');
-      } else {
-        console.error('Error:', response.data.error);
-        setUser(null);
-      }
+      console.log('Attempting login...');
+      const response = await api.post<{ user: User }>('/login', { email, password });
+      console.log('Login response:', response.data);
+      setUser(response.data.user);
+      router.push('/dashboard');
     } catch (error) {
-      console.error('Network Error:', error);
-      setUser(null);
-    }
-  };
-  const logout = async () => {
-    const csrfToken = getCSRFToken();    
-    console.log(csrfToken);
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`,
-        {},
-        {
-          headers: {
-            'X-CSRFToken': csrfToken,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        }
-      );
-      if (response.status === 200) {
-        setUser(null);
-        router.push('');
-      } else {
-        console.error('Error during logout:', response.data.error);
+      console.error('Login error:', error);
+      if (axios.isAxiosError(error)) {
+        console.log('Response status:', error.response?.status);
+        console.log('Response data:', error.response?.data);
       }
-    } catch (error) {
-      console.error('Network Error during logout:', error);
+      setError('Login failed. Please check your credentials.');
     }
   };
 
+  const logout = async () => {
+    try {
+      console.log('Attempting logout...');
+      await api.post('/logout');
+      console.log('Logout successful');
+      setUser(null);
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      if (axios.isAxiosError(error)) {
+        console.log('Response status:', error.response?.status);
+        console.log('Response data:', error.response?.data);
+      }
+      setError('Logout failed. Please try again.');
+    }
+  };
+
+  const contextValue: AuthContextType = {
+    user,
+    loading,
+    login,
+    logout,
+    error,
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
