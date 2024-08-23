@@ -61,8 +61,8 @@ export default function Page() {
     const citasForDate = citas.filter(cita => dayjs(cita.fecha_hora).format('YYYY-MM-DD') === dateStr);
 
     return (
-      <div style={{ position: 'relative', height: '100%' }}>
-        {citasForDate.length > 0 && <Badge status="success" style={{ position: 'absolute', top: 5, right: 5 }} />}
+      <div className="relative h-full">
+        {citasForDate.length > 0 && <Badge status="success" className="absolute top-1 right-1" />}
       </div>
     );
   };
@@ -78,38 +78,44 @@ export default function Page() {
         },
       }}
     >
-      <div className="max-w-6xl mx-auto w-full flex items-center h-full">
-        <button
-          onClick={handleAddCita}
-          className="fixed top-12 right-15 z-50 bg-button1 hover:bg-button1alt font-bold py-2 px-4 rounded"
-        >
-          Agregar Cita
-        </button>
-        <div className="max-w-lg  text-center mx-auto calendar-container">
-          <p className="font-bold text-3xl my-4 ml-10">Citas</p>
-          <Calendar
-            value={selectedDate}
-            onSelect={onSelect}
-            fullscreen={false}
-            className="mt-20"
-          />
-        </div>
-        <div className="mt-4 ml-10 w-full citas-list">
-          {citas.length > 0 ? (
-            <ul>
-              {citas.map((cita) => (
-                <li key={cita.id_cita} className="border p-4 mb-4 rounded-md shadow-sm">
-                  <p className="font-bold">
-                    {formatInTimeZone(new Date(cita.fecha_hora), 'Etc/GMT', 'HH:mm')} - {formatInTimeZone(new Date(cita.fecha_hora), 'Etc/GMT-1', 'HH:mm')}
-                  </p>
-                  <p className="mt-1"><strong>Paciente: </strong> {cita.nombre_paciente}</p>
-                  {cita.motivo && <p className="mt-1"><strong>Motivo:</strong> {cita.motivo}</p>}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No hay citas para la fecha seleccionada.</p>
-          )}
+      <div className="max-w-7xl mx-auto p-4">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="lg:w-1/2">
+            <h2 className="font-bold text-3xl mb-6">Citas</h2>
+            <Calendar
+              value={selectedDate}
+              onSelect={onSelect}
+              fullscreen={false}
+              cellRender={dateCellRender}
+              className="bg-white rounded-lg shadow-md p-4"
+            />
+            <button
+              onClick={handleAddCita}
+              className="mt-4 w-full bg-button1 hover:bg-button1alt text-white font-bold py-2 px-4 rounded transition duration-300"
+            >
+              Agregar Cita
+            </button>
+          </div>
+          <div className="lg:w-1/2">
+            <h3 className="font-bold text-2xl mb-4">Citas para {selectedDate.format('DD/MM/YYYY')}</h3>
+            <div className="bg-white rounded-lg shadow-md p-4">
+              {citas.length > 0 ? (
+                <ul className="space-y-4">
+                  {citas.map((cita) => (
+                    <li key={cita.id_cita} className="border-b pb-4 last:border-b-0">
+                      <p className="font-bold text-lg text-gray-800">
+                        {formatInTimeZone(new Date(cita.fecha_hora), 'Etc/GMT', 'HH:mm')} - {formatInTimeZone(new Date(cita.fecha_hora), 'Etc/GMT-1', 'HH:mm')}
+                      </p>
+                      <p className="text-gray-600"><strong>Paciente:</strong> {cita.nombre_paciente}</p>
+                      {cita.motivo && <p className="text-gray-600"><strong>Motivo:</strong> {cita.motivo}</p>}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-600">No hay citas para la fecha seleccionada.</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </ConfigProvider>
