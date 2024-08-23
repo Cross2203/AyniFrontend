@@ -2,7 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
-  withCredentials: true,
+  withCredentials: true, // This is crucial for sending cookies
 });
 
 const getCSRFToken = (): string | null => {

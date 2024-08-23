@@ -25,8 +25,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const router = useRouter();
 
   useEffect(() => {
+    const fetchCSRFToken = async () => {
+      try {
+        await api.get('/get_csrf_token');
+        console.log('CSRF token fetched successfully');
+      } catch (error) {
+        console.error('Error fetching CSRF token:', error);
+      }
+    };
+
     const checkUserLoggedIn = async () => {
       try {
+        await fetchCSRFToken(); // Fetch CSRF token before checking login status
         console.log('Checking user login status...');
         const response = await api.get<{ user: User }>('/user');
         console.log('User login response:', response.data);
@@ -48,6 +58,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
+      await api.get('/get_csrf_token'); // Fetch CSRF token before login
       console.log('Attempting login...');
       const response = await api.post<{ user: User }>('/login', { email, password });
       console.log('Login response:', response.data);
@@ -65,6 +76,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
+      await api.get('/get_csrf_token'); // Fetch CSRF token before logout
       console.log('Attempting logout...');
       await api.post('/logout');
       console.log('Logout successful');
