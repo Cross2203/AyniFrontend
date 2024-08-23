@@ -72,7 +72,7 @@ export default function Page() {
       theme={{
         token: {
           colorBgBase: '#FDAC4A',
-          colorTextBase: '#FFFFFF',
+          colorTextBase: '#1A2633',
           colorPrimary: '#FDAC4A',
           colorBgContainer: '#334D66',
         },
@@ -98,12 +98,12 @@ export default function Page() {
           </div>
           <div className="lg:w-1/2">
             <h3 className="font-bold text-2xl mb-4">Citas para {selectedDate.format('DD/MM/YYYY')}</h3>
-            <div className="bg-white rounded-lg shadow-md p-4">
+            <div className="bg-first rounded-lg shadow-md p-4">
               {citas.length > 0 ? (
                 <ul className="space-y-4">
                   {citas.map((cita) => (
                     <li key={cita.id_cita} className="border-b pb-4 last:border-b-0">
-                      <p className="font-bold text-lg text-gray-800">
+                      <p className="font-bold text-lg">
                         {formatInTimeZone(new Date(cita.fecha_hora), 'Etc/GMT', 'HH:mm')} - {formatInTimeZone(new Date(cita.fecha_hora), 'Etc/GMT-1', 'HH:mm')}
                       </p>
                       <p className="text-gray-600"><strong>Paciente:</strong> {cita.nombre_paciente}</p>

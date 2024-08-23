@@ -1,7 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '../lib/axiosConfig';
-import axios from 'axios';
 
 interface User {
   email: string;
@@ -24,29 +22,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchCSRFToken = async () => {
-      try {
-        await api.get('/get_csrf_token');
-        console.log('CSRF token fetched successfully');
-      } catch (error) {
-        console.error('Error fetching CSRF token:', error);
-      }
-    };
+  const fetchWithCredentials = (url: string, options: RequestInit = {}) => {
+    return fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}${url}`, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        ...options.headers,
+        'Content-Type': 'application/json',
+      },
+    });
+  };
 
+  useEffect(() => {
     const checkUserLoggedIn = async () => {
       try {
-        await fetchCSRFToken(); // Fetch CSRF token before checking login status
-        console.log('Checking user login status...');
-        const response = await api.get<{ user: User }>('/user');
-        console.log('User login response:', response.data);
-        setUser(response.data.user);
+        // Fetch CSRF token
+        await fetchWithCredentials('/get_csrf_token');
+        
+        // Check user login status
+        const response = await fetchWithCredentials('/user');
+        if (!response.ok) {
+          throw new Error('Error fetching user data');
+        }
+        const data = await response.json();
+        setUser(data.user);
       } catch (error) {
         console.error('Error checking user login status:', error);
-        if (axios.isAxiosError(error)) {
-          console.log('Response status:', error.response?.status);
-          console.log('Response data:', error.response?.data);
-        }
         setUser(null);
       } finally {
         setLoading(false);
@@ -58,36 +59,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
-      await api.get('/get_csrf_token'); // Fetch CSRF token before login
-      console.log('Attempting login...');
-      const response = await api.post<{ user: User }>('/login', { email, password });
-      console.log('Login response:', response.data);
-      setUser(response.data.user);
+      // Fetch CSRF token before login
+      await fetchWithCredentials('/get_csrf_token');
+
+      const response = await fetchWithCredentials('/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+      setUser(data.user);
       router.push('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
-      if (axios.isAxiosError(error)) {
-        console.log('Response status:', error.response?.status);
-        console.log('Response data:', error.response?.data);
-      }
       setError('Login failed. Please check your credentials.');
     }
   };
 
   const logout = async () => {
     try {
-      await api.get('/get_csrf_token'); // Fetch CSRF token before logout
-      console.log('Attempting logout...');
-      await api.post('/logout');
-      console.log('Logout successful');
+      // Fetch CSRF token before logout
+      await fetchWithCredentials('/get_csrf_token');
+
+      const response = await fetchWithCredentials('/logout', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+
       setUser(null);
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
-      if (axios.isAxiosError(error)) {
-        console.log('Response status:', error.response?.status);
-        console.log('Response data:', error.response?.data);
-      }
       setError('Logout failed. Please try again.');
     }
   };
