@@ -20,6 +20,7 @@ api.interceptors.request.use(
     }
     console.log('Request:', config.method?.toUpperCase(), config.url);
     console.log('Headers:', config.headers);
+    console.log('CSRF Token:', csrfToken);
     return config;
   },
   (error: unknown) => {
