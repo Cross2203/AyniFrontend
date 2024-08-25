@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TreatmentData, FormData } from '@/app/ui/patients/interfaces';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface TreatmentFormProps {
   data: TreatmentData;
@@ -8,78 +9,89 @@ interface TreatmentFormProps {
 
 export const TreatmentForm: React.FC<TreatmentFormProps> = ({ data, onChange }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [errors, setErrors] = useState<{ [key in keyof TreatmentData]?: string }>({});
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     onChange('treatment', id as keyof TreatmentData, value);
-  }
+    validateField(id as keyof TreatmentData, value);
+  };
 
-  const toggleVisibility = () => {
-    setIsVisible(!isVisible);
-  }
-  return (
-    <div className="max-w-6xl mx-auto p-6 rounded-md shadow-md">
-      <div>
-        <div onClick={toggleVisibility}>
-          <p className="block mb-4 font-bold text-lg cursor-pointer">
-            Tratamiento {isVisible ? '▼' : '▲'}
-            </p>
-        </div>
-        {isVisible && (
-        <form>
-          <div className="mb-4">
-            <label className="block mb-1" htmlFor="descripcion">
-              Descripcion
-            </label>
-            <textarea 
-              id="descripcion"
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:border-blue-500 border-black bg-second "
-              value={data.descripcion}
-              onChange={handleInputChange}
-              />
-          </div>
+  const validateField = (field: keyof TreatmentData, value: string): boolean => {
+    let error = '';
 
-          <div className="mb-4">
-            <label className="block mb-1" htmlFor="duracion">
-              Duracion
-            </label>
-            <input
-              type="text"
-              id="duracion"
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:border-blue-500 border-black bg-second "
-              value={data.duracion}
-              onChange={handleInputChange}
-            />
-          </div>
+    switch (field) {
+      case 'descripcion':
+        if (value.length > 500) {
+          error = 'La descripción no debe exceder los 500 caracteres.';
+        }
+        break;
+      case 'duracion':
+        if (value.length > 100) {
+          error = 'La duración no debe exceder los 100 caracteres.';
+        }
+        break;
+      case 'dosis':
+        if (value.length > 100) {
+          error = 'La dosis no debe exceder los 100 caracteres.';
+        }
+        break;
+      case 'frecuencia':
+        if (value.length > 100) {
+          error = 'La frecuencia no debe exceder los 100 caracteres.';
+        }
+        break;
+    }
 
-          <div className="mb-4">
-            <label className="block mb-1" htmlFor="dosis">
-              Dosis
-            </label>
-            <input
-              type="text"
-              id="dosis"
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:border-blue-500 border-black bg-second "
-              value={data.dosis}
-              onChange={handleInputChange}
-            />
-          </div>
+    setErrors(prev => ({ ...prev, [field]: error }));
+    return !error;
+  };
 
-          <div className="mb-4">
-            <label className="block mb-1" htmlFor="frecuencia">
-              Frecuencia
-            </label>
-            <input
-              type="text"
-              id="frecuencia"
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:border-blue-500 border-black bg-second "
-              value={data.frecuencia}
-              onChange={handleInputChange}
-            />
-          </div>
+  const toggleVisibility = () => setIsVisible(!isVisible);
 
-        </form>
-        )}
-      </div>
+  const renderInput = (id: keyof TreatmentData, label: string, type: 'input' | 'textarea' = 'input') => (
+    <div className="mb-4">
+      <label className="block mb-1" htmlFor={id}>
+        {label}:
+      </label>
+      {type === 'input' ? (
+        <input
+          type="text"
+          id={id}
+          value={data[id]}
+          onChange={handleInputChange}
+          className={`w-full px-3 py-2 ring-2 ${errors[id] ? 'ring-red-500' : 'ring-orange'} bg-second rounded-md focus:outline-none focus:ring-blue-500`}
+        />
+      ) : (
+        <textarea
+          id={id}
+          value={data[id]}
+          onChange={handleInputChange}
+          className={`w-full px-3 py-2 ring-2 ${errors[id] ? 'ring-red-500' : 'ring-orange'} bg-second rounded-md focus:outline-none focus:ring-blue-500`}
+          rows={4}
+        />
+      )}
+      {errors[id] && <p className="text-red-500 text-xs mt-1">{errors[id]}</p>}
     </div>
   );
-}
+
+  return (
+    <div className="w-full max-w-4xl mx-auto bg-second text-white p-6 rounded-lg shadow-lg">
+      <div 
+        className="flex justify-between items-center cursor-pointer"
+        onClick={toggleVisibility}
+      >
+        <h2 className="text-2xl font-bold text-orange">Tratamiento</h2>
+        {isVisible ? <ChevronUp className="text-orange" /> : <ChevronDown className="text-orange" />}
+      </div>
+      {isVisible && (
+        <form className="mt-4">
+          {renderInput('descripcion', 'Descripción', 'textarea')}
+          {renderInput('duracion', 'Duración')}
+          {renderInput('dosis', 'Dosis')}
+          {renderInput('frecuencia', 'Frecuencia')}
+        </form>
+      )}
+    </div>
+  );
+};

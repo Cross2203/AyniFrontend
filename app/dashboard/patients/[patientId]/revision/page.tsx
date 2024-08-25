@@ -1,6 +1,19 @@
 'use client';
 import React, { useState, useEffect } from "react";
 
+const tiposRevision = [
+  { id: 1, nombre: 'ÓRGANOS DE LOS SENTIDOS' },
+  { id: 2, nombre: 'RESPIRATORIO' },
+  { id: 3, nombre: 'CARDIO VASCULAR' },
+  { id: 4, nombre: 'DIGESTIVO' },
+  { id: 5, nombre: 'GENITAL' },
+  { id: 6, nombre: 'URINARIO' },
+  { id: 7, nombre: 'MUSCULO ESQUELÉTICO' },
+  { id: 8, nombre: 'ENDOCRINO' },
+  { id: 9, nombre: 'HEMO LINFÁTICO' },
+  { id: 10, nombre: 'NERVIOSO' },
+];
+
 export default function Page({ params }: { params: { patientId: number } }) {
   const [tipo_organos, setTipoOrganos] = useState<number>(1);
   const [descripcion, setDescripcion] = useState<string>("");
@@ -58,51 +71,70 @@ export default function Page({ params }: { params: { patientId: number } }) {
     
   };
   return (
-    <div className="max-w-6xl mx-auto p-6 rounded-md shadow-md">
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <p className="block mb-1 font-bold text-lg mt-4 text-orange">Revision de Organos y Sistemas</p>
-          <label className="block mb-1" htmlFor="tipoRevision">Tipo de Revision</label>
+    <div className="w-full max-w-4xl mx-auto bg-second text-white p-6 rounded-lg shadow-lg">
+      <h2 className="text-2xl font-bold text-orange mb-6">Revisión de Órganos y Sistemas</h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label htmlFor="tipoRevision" className="block text-sm font-medium mb-2">
+            Tipo de Revisión
+          </label>
           <select
             id="tipoRevision"
-            className="w-full px-3 py-2 border-black bg-second rounded-md focus:outline-none focus:border-blue-500"
+            className="w-full bg-second text-white px-3 py-2 rounded-md focus:outline-none  ring-2 ring-orange"
             onChange={(e) => setTipoOrganos(Number(e.target.value))}
           >
-            <option value={1}>Organos de los Sentidos</option>
-            <option value={2}>Respiratorio</option>
-            <option value={3}>CardioVascular</option>
-            <option value={4}>Digestivo</option>
+            {tiposRevision.map((tipo) => (
+              <option key={tipo.id} value={tipo.id}>
+                {tipo.nombre}
+              </option>
+            ))}
           </select>
         </div>
-        <div className="mb-4">
-          <label className="block mb-1" htmlFor="descripcion6">Descripcion</label>
-          <textarea 
-            id="descripcion6"
-            className="w-full px-3 py-2 border-black rounded-md focus:outline-none focus:border-blue-500 bg-second"
+        <div>
+          <label htmlFor="descripcion" className="block text-sm font-medium mb-2">
+            Descripción
+          </label>
+          <textarea
+            id="descripcion"
+            className="w-full bg-second text-white px-3 py-2 rounded-md focus:outline-none  ring-2 ring-orange resize-none"
+            rows={4}
+            placeholder="Ingrese la descripción de la revisión"
             onChange={(e) => setDescripcion(e.target.value)}
           />
         </div>
-        <div className="mb-4">
-          <label className="block mb-1" htmlFor="image">Subir Archivo:</label>
-          <input
-            id="image"
-            type="file"
-            onChange={(event) => {
-              if (event.target.files) {
-                setRevisionFile(event.target.files[0]);
-              }
-            }}
-            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-black focus:border-blue-500 text-white"
-          />
+        <div>
+          <label htmlFor="image" className="block text-sm font-medium mb-2">
+            Subir Archivo
+          </label>
+          <div className="flex items-center space-x-2">
+            <label
+              htmlFor="image"
+              className="cursor-pointer bg-orange text-white px-4 py-2 rounded-md transition duration-300 ease-in-out"
+            >
+              Seleccionar archivo
+            </label>
+            <input
+              id="image"
+              type="file"
+              className="hidden"
+              onChange={(event) => {
+                if (event.target.files) {
+                  setRevisionFile(event.target.files[0]);
+                }
+              }}
+            />
+            <span className="text-sm">
+              {revisionFile ? revisionFile.name : "Ningún archivo seleccionado"}
+            </span>
+          </div>
         </div>
-        <button 
+        <button
           type="submit"
-          className="w-full py-2 bg-brown rounded-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600"
+          className="w-full bg-brown hover:bg-orange text-white py-2 rounded-md transition duration-300 ease-in-out"
         >
-          Agregar Revision
+          Agregar Revisión
         </button>
       </form>
     </div>
   );
 }
-  

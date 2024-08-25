@@ -22,7 +22,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
   }, [user, loading, pathname, router]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Cargando...</div>;
   }
 
   return <>{children}</>;

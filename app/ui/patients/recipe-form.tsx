@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { RecipeData, FormData } from '@/app/ui/patients/interfaces';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface RecipeFormProps {
   data: RecipeData;
@@ -8,53 +9,72 @@ interface RecipeFormProps {
 
 export const RecipeForm: React.FC<RecipeFormProps> = ({ data, onChange }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [errors, setErrors] = useState<{ [key in keyof RecipeData]?: string }>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     onChange('recipe', id as keyof RecipeData, value);
-  }
+    validateField(id as keyof RecipeData, value);
+  };
 
-  const toggleVisibility = () => {
-    setIsVisible(!isVisible);
-  }
+  const validateField = (field: keyof RecipeData, value: string): boolean => {
+    let error = '';
 
-  return (
-    <div className="max-w-6xl mx-auto p-6 rounded-md shadow-md">
-      <div>
-        <div onClick={toggleVisibility}>
-          <p className="block mb-4 font-bold text-lg cursor-pointer">
-            Receta {isVisible ? '▼' : '▲'}
-          </p>
-        </div>
-        {isVisible && (
-          <form>
-            <div className="mb-4">
-              <label className="block mb-1" htmlFor="fecha_receta">
-                Fecha
-              </label>
-              <input
-                type="date"
-                id="fecha_receta"
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:border-blue-500 border-black bg-second"
-                value={data.fecha_receta}
-                onChange={handleInputChange}
-              />
-            </div>
+    switch (field) {
+      case 'medicamentos_recetados':
+        if (value.length > 1000) {
+          error = 'Los medicamentos recetados no deben exceder los 1000 caracteres.';
+        }
+        break;
+    }
 
-            <div className="mb-4">
-              <label className="block mb-1" htmlFor="medicamentos_recetados">
-                Medicamentos Recetados
-              </label>
-              <textarea
-                id="medicamentos_recetados"
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:border-blue-500 border-black bg-second"
-                value={data.medicamentos_recetados}
-                onChange={handleInputChange}
-              />
-            </div>
-          </form>
-        )}
-      </div>
+    setErrors(prev => ({ ...prev, [field]: error }));
+    return !error;
+  };
+
+  const toggleVisibility = () => setIsVisible(!isVisible);
+
+  const renderInput = (id: keyof RecipeData, label: string, type: 'date' | 'textarea' = 'date') => (
+    <div className="mb-4">
+      <label className="block mb-1" htmlFor={id}>
+        {label}:
+      </label>
+      {type === 'date' ? (
+        <input
+          type="date"
+          id={id}
+          value={data[id]}
+          onChange={handleInputChange}
+          className={`w-full px-3 py-2 ring-2 ${errors[id] ? 'ring-red-500' : 'ring-orange'} bg-second rounded-md focus:outline-none focus:ring-blue-500`}
+        />
+      ) : (
+        <textarea
+          id={id}
+          value={data[id]}
+          onChange={handleInputChange}
+          className={`w-full px-3 py-2 ring-2 ${errors[id] ? 'ring-red-500' : 'ring-orange'} bg-second rounded-md focus:outline-none focus:ring-blue-500`}
+          rows={4}
+        />
+      )}
+      {errors[id] && <p className="text-red-500 text-xs mt-1">{errors[id]}</p>}
     </div>
   );
-}
+
+  return (
+    <div className="w-full max-w-4xl mx-auto bg-second text-white p-6 rounded-lg shadow-lg">
+      <div 
+        className="flex justify-between items-center cursor-pointer"
+        onClick={toggleVisibility}
+      >
+        <h2 className="text-2xl font-bold text-orange">Receta</h2>
+        {isVisible ? <ChevronUp className="text-orange" /> : <ChevronDown className="text-orange" />}
+      </div>
+      {isVisible && (
+        <form className="mt-4">
+          {renderInput('fecha_receta', 'Fecha de la receta', 'date')}
+          {renderInput('medicamentos_recetados', 'Medicamentos recetados', 'textarea')}
+        </form>
+      )}
+    </div>
+  );
+};

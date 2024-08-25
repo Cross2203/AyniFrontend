@@ -93,7 +93,7 @@ return (
             />
           )}
           <Image
-            src={patient?.image_url || PatientFace}
+            src={PatientFace}
             alt="Patient Face"
             width={100}
             height={100}

@@ -40,6 +40,10 @@ export default function Page({ params }: { params: { patientId: number } }) {
     }
   });
 
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
+  const [showTreatment, setShowTreatment] = useState(false);
+  const [showRecipe, setShowRecipe] = useState(false);
+
   const handleChange = (formName: keyof FormData, field: string, value: string) => {
     setFormData((prevData) => ({
       ...prevData,
@@ -71,7 +75,6 @@ export default function Page({ params }: { params: { patientId: number } }) {
         },
         body: JSON.stringify(formData.vitalSigns),
       });
-      console.log(JSON.stringify(formData.vitalSigns));
       const vitalSignsResult = await vitalSignsResponse.json();
       console.log('Vital Signs Response:', vitalSignsResult);
   
@@ -85,35 +88,43 @@ export default function Page({ params }: { params: { patientId: number } }) {
       const consultationResult = await consultationResponse.json();
       console.log('Consultation Response:', consultationResult);
 
-      const diagnosticResponse = await fetch(urls.diagnostic, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData.diagnostic),
-      });
-      const diagnosticResult = await diagnosticResponse.json();
-      console.log('Diagnostic Response:', diagnosticResult);
+      let diagnosticResult, treatmentResult, recipeResult;
 
-      const treatmentResponse = await fetch(urls.treatment, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData.treatment),
-      });
-      const treatmentResult = await treatmentResponse.json();
-      console.log('Treatment Response:', treatmentResult);
+      if (showDiagnostic) {
+        const diagnosticResponse = await fetch(urls.diagnostic, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData.diagnostic),
+        });
+        diagnosticResult = await diagnosticResponse.json();
+        console.log('Diagnostic Response:', diagnosticResult);
+      }
 
-      const recipeResponse = await fetch(urls.recipe, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData.recipe),
-      });
-      const recipeResult = await recipeResponse.json();
-      console.log('Recipe Response:', recipeResult);
+      if (showTreatment) {
+        const treatmentResponse = await fetch(urls.treatment, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData.treatment),
+        });
+        treatmentResult = await treatmentResponse.json();
+        console.log('Treatment Response:', treatmentResult);
+      }
+
+      if (showRecipe) {
+        const recipeResponse = await fetch(urls.recipe, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData.recipe),
+        });
+        recipeResult = await recipeResponse.json();
+        console.log('Recipe Response:', recipeResult);
+      }
 
       const patientResponse = await fetch(urls.paciente, {
         method: 'GET',
@@ -128,9 +139,9 @@ export default function Page({ params }: { params: { patientId: number } }) {
         paciente: patientResult.id_patient,
         consulta: consultationResult.id_consulta,
         signos_vitales: vitalSignsResult.id_signos,
-        diagnostico: diagnosticResult.id_diagnostico,
-        tratamiento: treatmentResult.id_tratamiento,
-        receta: recipeResult.id_receta,
+        diagnostico: showDiagnostic ? diagnosticResult.id_diagnostico : null,
+        tratamiento: showTreatment ? treatmentResult.id_tratamiento : null,
+        receta: showRecipe ? recipeResult.id_receta : null,
       };
   
       console.log(JSON.stringify(historialData));
@@ -155,22 +166,59 @@ export default function Page({ params }: { params: { patientId: number } }) {
     }
   };
 
+  const ToggleCheckbox = ({ id, checked, onChange, label }: { id: string, checked: boolean, onChange: (checked: boolean) => void, label: string }) => (
+    <div className="flex items-center space-x-2 mb-2">
+      <input
+        type="checkbox"
+        id={id}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="w-4 h-4 text-orange bg-gray-100 border-gray-300 rounded focus:ring-orange dark:focus:ring-orange dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+      />
+      <label htmlFor={id} className="text-sm font-medium text-white">
+        {label}
+      </label>
+    </div>
+  );
+
   return (
-  <div className="max-w-6xl mx-auto p-6 rounded-md shadow-md">
-    <h2 className="text-2xl font-bold mb-4 text-orange text-center">Datos relevantes de la consulta</h2>
+    <div className="w-full max-w-4xl mx-auto bg-second text-white p-6 rounded-lg shadow-lg">
+      <h2 className="text-2xl font-bold mb-4 text-orange text-center">Datos relevantes de la consulta</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <VitalSignsForm data={formData.vitalSigns} onChange={handleChange}/>
         <ConsultationForm data={formData.consultation} onChange={handleChange}/>
-        <DiagnosticForm data={formData.diagnostic} onChange={handleChange}/>
-        <TreatmentForm data={formData.treatment} onChange={handleChange}/>
-        <RecipeForm data={formData.recipe} onChange={handleChange}/>
-          <button 
-            type="submit"
-            className="w-full py-2 bg-brown rounded-md hover:bg-brownalt focus:outline-none focus:bg-blue-600"
-          >
-        Guardar
-      </button>
-    </form>
-  </div>
+        
+        <ToggleCheckbox
+          id="show-diagnostic"
+          checked={showDiagnostic}
+          onChange={setShowDiagnostic}
+          label="Incluir Diagnóstico"
+        />
+        {showDiagnostic && <DiagnosticForm data={formData.diagnostic} onChange={handleChange}/>}
+        
+        <ToggleCheckbox
+          id="show-treatment"
+          checked={showTreatment}
+          onChange={setShowTreatment}
+          label="Incluir Tratamiento"
+        />
+        {showTreatment && <TreatmentForm data={formData.treatment} onChange={handleChange}/>}
+        
+        <ToggleCheckbox
+          id="show-recipe"
+          checked={showRecipe}
+          onChange={setShowRecipe}
+          label="Incluir Receta"
+        />
+        {showRecipe && <RecipeForm data={formData.recipe} onChange={handleChange}/>}
+        
+        <button 
+          type="submit"
+          className="w-full py-2 bg-brown rounded-md hover:bg-brownalt focus:outline-none focus:bg-blue-600"
+        >
+          Guardar
+        </button>
+      </form>
+    </div>
   );
 }

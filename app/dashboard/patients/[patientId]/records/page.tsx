@@ -38,7 +38,6 @@ const PacientePage: React.FC<PacientePageProps> = ({ patientId }) => {
     fetchData();
   }, [patientId]);
 
-  // Función para agrupar historiales por fecha
   const groupByDate = <T,>(entries: T[], dateField: keyof T) => {
     return entries.reduce((acc, entry) => {
       const date = new Date(entry[dateField] as unknown as string).toLocaleDateString();
@@ -51,7 +50,7 @@ const PacientePage: React.FC<PacientePageProps> = ({ patientId }) => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Cargando...</div>;
   }
 
   const historialesGrouped = groupByDate<Historial>(historiales, 'fecha_creacion');
@@ -59,8 +58,8 @@ const PacientePage: React.FC<PacientePageProps> = ({ patientId }) => {
   const revisionesOrganosGrouped = groupByDate<RevisionOrgano>(revisionesOrganos, 'fecha_revision');
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Historial del Paciente</h1>
+    <div className="w-full max-w-4xl mx-auto bg-second text-white p-6 rounded-lg shadow-lg">
+      <h1 className="text-3xl text-orange font-bold mb-4">Historial del Paciente</h1>
       {Object.keys(historialesGrouped).map(date => (
         <div key={date}>
           <h2 className="text-2xl font-semibold my-2">Historial del {date}</h2>
@@ -70,7 +69,7 @@ const PacientePage: React.FC<PacientePageProps> = ({ patientId }) => {
         </div>
       ))}
 
-      <h1 className="text-3xl font-bold mb-4 mt-8">Exámenes Físicos</h1>
+      <h1 className="text-3xl text-orange font-bold mb-4 mt-8">Exámenes Físicos</h1>
       {Object.keys(examenesFisicosGrouped).map(date => (
         <div key={date}>
           <h2 className="text-2xl font-semibold my-2">Exámenes Físicos del {date}</h2>
@@ -80,7 +79,7 @@ const PacientePage: React.FC<PacientePageProps> = ({ patientId }) => {
         </div>
       ))}
 
-      <h1 className="text-3xl font-bold mb-4 mt-8">Revisiones de Órganos y Sistemas</h1>
+      <h1 className="text-3xl text-orange font-bold mb-4 mt-8">Revisiones de Órganos y Sistemas</h1>
       {Object.keys(revisionesOrganosGrouped).map(date => (
         <div key={date}>
           <h2 className="text-2xl font-semibold my-2">Revisiones del {date}</h2>

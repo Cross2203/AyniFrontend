@@ -3,32 +3,28 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 2, 6, 24;
-  --background-rgb: 248,242,190;
-  --background-end-rgb: 248,242,190;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255,255,255;
-    --background-start-rgb: 26, 38, 51; 
-    --background-end-rgb: 26, 38, 51 ;
-  }
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 26, 38, 51;
+  --background-end-rgb: 26, 38, 51;
+  
+  /* Definimos colores personalizados para nuestro tema oscuro */
+  --color-primary: 59, 130, 246;    /* Azul */
+  --color-secondary: 248, 242, 190; /* Amarillo claro */
+  --color-accent: 236, 72, 153;     /* Rosa */
+  --color-text: 255, 255, 255;      /* Blanco */
+  --color-background: 26, 38, 51;   /* Azul oscuro */
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      rgb(var(--background-start-rgb)),
-      rgb(var(--background-end-rgb))
-    );
+  color: rgb(var(--color-text));
+  background: rgb(var(--color-background));
 }
 
+/* Estilo para inputs autofill */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 20px #334D66 inset !important;
-  -webkit-text-fill-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0 30px rgb(var(--color-background)) inset !important;
+  -webkit-text-fill-color: rgb(var(--color-text)) !important;
 }

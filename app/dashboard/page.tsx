@@ -9,7 +9,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Interfaces para los tipos de datos
 interface Appointment {
   id_cita: number;
   fecha_hora: string;
@@ -31,10 +30,14 @@ interface Consultation {
   paciente: number;
 }
 
+interface AppointmentWithPatientName extends Appointment {
+  patientName: string;
+}
+
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentWithPatientName[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [patientStats, setPatientStats] = useState({ total: 0, new: 0, active: 0 });
@@ -50,22 +53,28 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch appointments
       const appointmentsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/citas/`);
       const appointmentsData = await appointmentsResponse.json();
-      setAppointments(appointmentsData);
 
-      // Fetch patients
       const patientsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/pacientes/`);
       const patientsData = await patientsResponse.json();
       setPatients(patientsData);
 
-      // Fetch consultations
       const consultationsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/consultas/`);
       const consultationsData = await consultationsResponse.json();
       setConsultations(consultationsData);
 
-      // Calculate stats
+      const appointmentsWithNames = await Promise.all(appointmentsData.map(async (appointment: Appointment) => {
+        const patientResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/pacientes/${appointment.paciente}`);
+        const patientData = await patientResponse.json();
+        return {
+          ...appointment,
+          patientName: `${patientData.name} ${patientData.lastname}`
+        };
+      }));
+
+      setAppointments(appointmentsWithNames);
+
       setPatientStats({
         total: patientsData.length,
         new: patientsData.filter((p: Patient) => new Date(p.id_patient).getMonth() === new Date().getMonth()).length,
@@ -140,7 +149,7 @@ const Dashboard = () => {
             <ul>
               {appointments.slice(0, 3).map(appointment => (
                 <li key={appointment.id_cita}>
-                  {new Date(appointment.fecha_hora).toLocaleDateString()} - {appointment.motivo}
+                  {new Date(appointment.fecha_hora).toLocaleDateString()} - {appointment.patientName}
                 </li>
               ))}
             </ul>
