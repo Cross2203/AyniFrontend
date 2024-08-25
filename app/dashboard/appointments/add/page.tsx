@@ -1,9 +1,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import { format, isBefore, isAfter, addHours } from 'date-fns';
+import { format, isBefore, isAfter, addHours, setHours, setMinutes, startOfDay } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface Paciente {
   id_patient: string;
@@ -31,7 +30,7 @@ export default function Page() {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [citas, setCitas] = useState<Cita[]>([]);
   const [motivo, setMotivo] = useState('');
-  const [estado, setEstado] = useState('');
+  const [estado, setEstado] = useState('Confirmada');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -65,18 +64,37 @@ export default function Page() {
     fetchCitas();
   }, []);
 
+  const validateAppointmentTime = (date: Date) => {
+    const hour = date.getHours();
+    const minutes = date.getMinutes();
+    return (hour >= 8 && hour < 18) && (minutes === 0 || minutes === 30);
+  };
+
+  const validateFutureDate = (date: Date) => {
+    const today = startOfDay(new Date());
+    return isAfter(date, today) || format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     const newCitaStart = new Date(fechaHora);
     const newCitaEnd = addHours(newCitaStart, 1);
 
-    for (const cita of citas) {
+    if (!validateFutureDate(newCitaStart)) {
+      setError('No se pueden programar citas en fechas pasadas.');
+      return;
+    }
 
-      const existingCitaStart = addHours(new Date(cita.fecha_hora), 5);
-      console.log(existingCitaStart + ' Existente');
-      const existingCitaEnd = addHours(existingCitaStart, 6);
-      console.log(existingCitaEnd   + ' Existente final');
+    if (!validateAppointmentTime(newCitaStart)) {
+      setError('Las citas deben ser programadas entre las 8:00 AM y las 6:00 PM, en intervalos de 30 minutos.');
+      return;
+    }
+
+    for (const cita of citas) {
+      const existingCitaStart = new Date(cita.fecha_hora);
+      const existingCitaEnd = addHours(existingCitaStart, 1);
 
       if (
         (isBefore(newCitaStart, existingCitaEnd) && isAfter(newCitaStart, existingCitaStart)) ||
@@ -110,31 +128,31 @@ export default function Page() {
       router.push('/dashboard/appointments');
     } catch (error) {
       console.error('Error adding cita:', error);
+      setError('Hubo un error al agregar la cita. Por favor, inténtelo de nuevo.');
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 rounded-md shadow-md">
-      <h1 className="text-2xl font-bold mb-4">Agregar Cita</h1>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Fecha y Hora</label>
+    <div className="max-w-2xl mx-auto p-8 bg-[#334D66] rounded-lg shadow-xl">
+      <h1 className="text-3xl font-bold mb-6 text-[#FDAC4A]">Agregar Nueva Cita</h1>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium mb-2 text-white">Fecha y Hora</label>
           <input
             type="datetime-local"
             value={fechaHora}
-            onChange={(e) => {
-              setFechaHora(e.target.value)}}
-            className="w-full p-2 border bg-second border-gray-300 rounded-md"
+            onChange={(e) => setFechaHora(e.target.value)}
+            min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+            className="w-full p-3 bg-[#1A2633] border border-[#FDAC4A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[#FDAC4A]"
             required
           />
         </div>
-        {error && <p className="text-red-500">{error}</p>}
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Paciente</label>
+        <div>
+          <label className="block text-sm font-medium mb-2 text-white">Paciente</label>
           <select
             value={pacienteId}
             onChange={(e) => setPacienteId(e.target.value)}
-            className="w-full p-2 border bg-second border-gray-300 rounded-md"
+            className="w-full p-3 bg-[#1A2633] border border-[#FDAC4A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[#FDAC4A]"
             required
           >
             <option value="">Selecciona un paciente</option>
@@ -145,20 +163,21 @@ export default function Page() {
             ))}
           </select>
         </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Motivo</label>
+        <div>
+          <label className="block text-sm font-medium mb-2 text-white">Motivo</label>
           <textarea
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
-            className="w-full p-2 border bg-second border-gray-300 rounded-md"
+            className="w-full p-3 bg-[#1A2633] border border-[#FDAC4A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[#FDAC4A]"
+            rows={4}
           />
         </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Estado</label>
+        <div>
+          <label className="block text-sm font-medium mb-2 text-white">Estado</label>
           <select
             value={estado}
             onChange={(e) => setEstado(e.target.value)}
-            className="w-full p-2 border bg-second border-gray-300 rounded-md"
+            className="w-full p-3 bg-[#1A2633] border border-[#FDAC4A] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[#FDAC4A]"
             required
           >
             <option value="Confirmada">Confirmada</option>
@@ -166,9 +185,10 @@ export default function Page() {
             <option value="Cancelada">Cancelada</option>
           </select>
         </div>
+        {error && <p className="text-red-500 bg-[#1A2633] p-3 rounded-md">{error}</p>}
         <button
           type="submit"
-          className="w-full p-2 bg-blue-500 text-white rounded-md"
+          className="w-full p-3 bg-[#FDAC4A] text-[#1A2633] rounded-md font-semibold hover:bg-[#FFC77D] transition duration-300"
         >
           Agregar Cita
         </button>

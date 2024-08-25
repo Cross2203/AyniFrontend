@@ -19,15 +19,32 @@ export default function Page() {
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
-    if (identification.length !== 10) {
-      newErrors.identification = 'La cédula debe tener 10 dígitos.';
+    
+    if (!/^\d{10}$/.test(identification)) {
+      newErrors.identification = 'La cédula debe tener exactamente 10 dígitos.';
     }
-    if (new Date(birthdate) > new Date()) {
+    
+    const birthDate = new Date(birthdate);
+    const today = new Date();
+    if (birthDate > today) {
       newErrors.birthdate = 'La fecha de nacimiento no puede ser posterior a la fecha actual.';
     }
-    if (!email.includes('@') || !email.includes('.')) {
-      newErrors.email = 'El email debe ser valido.';
+
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(email)) {
+      newErrors.email = 'Por favor, ingrese un email válido.';
     }
+
+    if (!/^\d{7,10}$/.test(phone)) {
+      newErrors.phone = 'El número de teléfono debe tener entre 7 y 10 dígitos.';
+    }
+    
+    ['name', 'lastname', 'identification', 'birthdate', 'gender', 'address', 'phone', 'email'].forEach(field => {
+      if (!(field in errors) && !eval(field)) {
+        newErrors[field] = 'Este campo es requerido.';
+      }
+    });
+    
     return newErrors;
   };
 
@@ -102,101 +119,120 @@ export default function Page() {
   };
   
   return (
-    <div className="max-w-md mx-auto p-6 rounded-md shadow-md text-orange">
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block mb-1" htmlFor="name">Nombre:</label>
-          <input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-black focus:border-blue-500 text-white"
-          />
+    <div className="max-w-2xl mx-auto p-8 bg-second rounded-lg shadow-lg">
+      <h2 className="text-3xl font-bold mb-6 text-orange text-center">Registro de Paciente</h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-1 text-orange" htmlFor="name">Nombre:</label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-orange focus:border-blue-500 text-white"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-orange" htmlFor="lastname">Apellido:</label>
+            <input
+              id="lastname"
+              type="text"
+              value={lastname}
+              onChange={(event) => setLastname(event.target.value)}
+              className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-orange focus:border-blue-500 text-white"
+              required
+            />
+          </div>
         </div>
-        <div className="mb-4">
-          <label className="block mb-1" htmlFor="lastname">Apellido:</label>
-          <input
-            id="lastname"
-            type="text"
-            value={lastname}
-            onChange={(event) => setLastname(event.target.value)}
-            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-black focus:border-blue-500 text-white"
-          />
-        </div>
+        
         <div>
-          <label className="block mb-1" htmlFor="identification">Cedula:</label>
+          <label className="block text-sm font-medium mb-1 text-orange" htmlFor="identification">Cédula:</label>
           <input
             id="identification"
             type="text"
             value={identification}
             onChange={(event) => setIdentification(event.target.value)}
             onBlur={handleBlur}
-            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-black focus:border-blue-500 text-white"
+            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-orange focus:border-blue-500 text-white"
+            required
           />
-          {errors.identification && <p className="text-red-500">{errors.identification}</p>}
+          {errors.identification && <p className="text-red-500 text-sm mt-1">{errors.identification}</p>}
         </div>
-        <div className="mb-4">
-          <label className="block mb-1" htmlFor="birthdate">Fecha de Nacimiento:</label>
-          <input
-            id="birthdate"
-            type="date"
-            value={birthdate}
-            onChange={(event) => setBirthdate(event.target.value)}
-            onBlur={handleBlur}
-            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-black focus:border-blue-500 text-white"
-          />
-          {errors.birthdate && <p className="text-red-500">{errors.birthdate}</p>}
-        </div>
-        <div className="mb-4">
-        <label className="block mb-1" htmlFor="gender">Genero:</label>
-          <select
-            id="gender"
-            value={gender}
-            onChange={(event) => setGender(event.target.value)}
-            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-black focus:border-blue-500 text-white"
-          >
-            <option value="">Seleccione</option>
-            <option value="M">Masculino</option>
-            <option value="F">Femenino</option>
-            <option value="O">Otro</option>
-          </select>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-1 text-orange" htmlFor="birthdate">Fecha de Nacimiento:</label>
+            <input
+              id="birthdate"
+              type="date"
+              value={birthdate}
+              onChange={(event) => setBirthdate(event.target.value)}
+              onBlur={handleBlur}
+              className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-orange focus:border-blue-500 text-white"
+              required
+            />
+            {errors.birthdate && <p className="text-red-500 text-sm mt-1">{errors.birthdate}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-orange" htmlFor="gender">Género:</label>
+            <select
+              id="gender"
+              value={gender}
+              onChange={(event) => setGender(event.target.value)}
+              className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-orange focus:border-blue-500 text-white"
+              required
+            >
+              <option value="">Seleccione</option>
+              <option value="M">Masculino</option>
+              <option value="F">Femenino</option>
+              <option value="O">Otro</option>
+            </select>
+          </div>
         </div>
-        <div className="mb-4">
-          <label className="block mb-1" htmlFor="address">Direccion:</label>
+
+        <div>
+          <label className="block text-sm font-medium mb-1 text-orange" htmlFor="address">Dirección:</label>
           <input
             id="address"
             type="text"
             value={address}
             onChange={(event) => setAddress(event.target.value)}
-            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-black focus:border-blue-500 text-white"
+            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-orange focus:border-blue-500 text-white"
+            required
           />
         </div>
-        <div className="mb-4">
-          <label className="block mb-1" htmlFor="phone">Telefono:</label>
-          <input
-            id="phone"
-            type="text"
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-black focus:border-blue-500 text-white"
-          />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-1 text-orange" htmlFor="phone">Teléfono:</label>
+            <input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-orange focus:border-blue-500 text-white"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-orange" htmlFor="email">Email:</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onBlur={handleBlur}
+              onChange={(event) => setEmail(event.target.value)}
+              className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-orange focus:border-blue-500 text-white"
+              required
+            />
+            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+          </div>
         </div>
-        <div className="mb-4">
-          <label className="block mb-1" htmlFor="email">Email:</label>
-          <input
-            id="email"
-            type="text"
-            value={email}
-            onBlur={handleBlur}
-            onChange={(event) => setEmail(event.target.value)}
-            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-black focus:border-blue-500 text-white"
-          />
-          {errors.email && <p className="text-red-500">{errors.email}</p>}
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1" htmlFor="image">Subir Imagen:</label>
+
+        <div>
+          <label className="block text-sm font-medium mb-1 text-orange" htmlFor="image">Subir Imagen:</label>
           <input
             id="image"
             type="file"
@@ -205,17 +241,17 @@ export default function Page() {
                 setImageFile(event.target.files[0]);
               }
             }}
-            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-black focus:border-blue-500 text-white"
+            className="w-full px-3 py-2 border bg-second rounded-md focus:outline-none border-orange focus:border-blue-500 text-white file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500"
           />
         </div>
+
         <button
           type="submit"
-          className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-400 focus:outline-none focus:bg-blue-400"
+          className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300"
         >
-          Submit
+          Registrar Paciente
         </button>
       </form>
     </div>
-  );  
-
+  );
 }

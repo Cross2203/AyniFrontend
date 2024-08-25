@@ -1,6 +1,5 @@
 'use client';
 import SideNav from '@/app/ui/dashboard/sidenav';
-import { AuthProvider } from '@/app/context/authcontext';
 import { useState } from 'react';
 
 
@@ -8,7 +7,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <AuthProvider>
       <div className="flex h-screen overflow-hidden bg-first">
         <div className={`fixed inset-0 flex z-40 md:hidden ${sidebarOpen ? '' : 'hidden'}`}>
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
@@ -49,6 +47,5 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
-    </AuthProvider>
   );
 }

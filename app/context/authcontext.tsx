@@ -1,9 +1,11 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { loginUser, logoutUser, fetchWithTokenRefresh, fetchUserData } from '../utils/authUtils';
 
 interface User {
   email: string;
   username: string;
+  // Añade aquí cualquier otra propiedad que tu usuario pueda tener
 }
 
 interface AuthContextType {
@@ -22,33 +24,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const fetchWithCredentials = (url: string, options: RequestInit = {}) => {
-    return fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}${url}`, {
-      ...options,
-      credentials: 'include',
-      headers: {
-        ...options.headers,
-        'Content-Type': 'application/json',
-      },
-    });
-  };
-
   useEffect(() => {
     const checkUserLoggedIn = async () => {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        // Fetch CSRF token
-        await fetchWithCredentials('/get_csrf_token');
-        
-        // Check user login status
-        const response = await fetchWithCredentials('/user');
-        if (!response.ok) {
-          throw new Error('Error fetching user data');
-        }
-        const data = await response.json();
-        setUser(data.user);
+        const userData = await fetchUserData();
+        setUser(userData);
       } catch (error) {
         console.error('Error checking user login status:', error);
         setUser(null);
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        router.push('/');
       } finally {
         setLoading(false);
       }
@@ -59,20 +51,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
-      // Fetch CSRF token before login
-      await fetchWithCredentials('/get_csrf_token');
-
-      const response = await fetchWithCredentials('/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
-
-      const data = await response.json();
-      setUser(data.user);
+      const tokens = await loginUser(email, password);
+      localStorage.setItem('access_token', tokens.access);
+      localStorage.setItem('refresh_token', tokens.refresh);
+      
+      // Fetch user data after successful login
+      const userData = await fetchUserData();
+      setUser(userData);
+      
       router.push('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
@@ -82,17 +68,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      // Fetch CSRF token before logout
-      await fetchWithCredentials('/get_csrf_token');
-
-      const response = await fetchWithCredentials('/logout', {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
-
+      await logoutUser();
       setUser(null);
       router.push('/');
     } catch (error) {
