@@ -13,6 +13,7 @@ interface Patient {
   address: string;
   phone: string;
   email: string;
+  image_url: string;
 }
 
 const loadPatients = async (params: {
@@ -91,7 +92,7 @@ export default function Page({ params }: { params: { patientId: string } }) {
         )}
         <div className="flex gap-4 items-center">
           <Image
-            src={PatientFace}
+            src={patient?.image_url || PatientFace}
             alt="Patient Face"
             width={100}
             height={100}

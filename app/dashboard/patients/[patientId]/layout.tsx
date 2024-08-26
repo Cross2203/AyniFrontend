@@ -85,7 +85,7 @@ return (
         <div className="flex flex-col md:flex-row gap-4 items-center">
         {!imageLoaded && (
             <Image
-              src={PatientFace}
+              src={patient?.image_url || PatientFace}
               alt="Default Patient Face"
               width={100}
               height={100}
@@ -93,7 +93,7 @@ return (
             />
           )}
           <Image
-            src={PatientFace}
+            src={patient?.image_url || PatientFace}
             alt="Patient Face"
             width={100}
             height={100}
