@@ -80,23 +80,23 @@ export default function PatientRegistrationPage() {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("filename", filename);
-
+  
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
     if (!backendUrl) {
       throw new Error('NEXT_PUBLIC_BACKEND_URL no está definida');
     }
-
+  
     try {
       const response = await fetch(`${backendUrl}/upload/patient-faces/`, {
         method: 'POST',
         body: formData,
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Error del servidor: ${response.status}`);
       }
-
+  
       const data = await response.json();
       return data.url;
     } catch (error) {
