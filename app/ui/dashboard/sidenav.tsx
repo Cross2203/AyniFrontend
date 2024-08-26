@@ -41,7 +41,7 @@ export default function SideNav({ onClose }: SideNavProps) {
             onClick={handleSignOut}
           >
             <PowerIcon className="w-6" />
-            <div className="hidden md:block">Sign Out</div>
+            <div className="hidden md:block">Salir de la Cuenta</div>
           </button>
         </form>
       </div>

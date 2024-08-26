@@ -53,15 +53,19 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const appointmentsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/citas/`);
-      const appointmentsData = await appointmentsResponse.json();
+      const [appointmentsResponse, patientsResponse, consultationsResponse] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/citas/`),
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/pacientes/`),
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/consultas/`)
+      ]);
 
-      const patientsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/pacientes/`);
-      const patientsData = await patientsResponse.json();
+      const [appointmentsData, patientsData, consultationsData] = await Promise.all([
+        appointmentsResponse.json(),
+        patientsResponse.json(),
+        consultationsResponse.json()
+      ]);
+
       setPatients(patientsData);
-
-      const consultationsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/consultas/`);
-      const consultationsData = await consultationsResponse.json();
       setConsultations(consultationsData);
 
       const appointmentsWithNames = await Promise.all(appointmentsData.map(async (appointment: Appointment) => {
@@ -75,16 +79,23 @@ const Dashboard = () => {
 
       setAppointments(appointmentsWithNames);
 
+      const now = new Date();
+      const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+
       setPatientStats({
         total: patientsData.length,
-        new: patientsData.filter((p: Patient) => new Date(p.id_patient).getMonth() === new Date().getMonth()).length,
-        active: patientsData.filter((p: Patient) => consultationsData.some((c: Consultation) => c.paciente === p.id_patient)).length
+        new: patientsData.filter((p: Patient) => new Date(p.id_patient) >= sixMonthsAgo).length,
+        active: patientsData.filter((p: Patient) => 
+          appointmentsWithNames.some((a: AppointmentWithPatientName) => 
+            a.paciente === p.id_patient && new Date(a.fecha_hora) >= sixMonthsAgo
+          )
+        ).length
       });
 
       setAppointmentStats({
         total: appointmentsData.length,
-        pending: appointmentsData.filter((a: Appointment) => a.estado === 'pendiente').length,
-        completed: appointmentsData.filter((a: Appointment) => a.estado === 'completada').length
+        pending: appointmentsData.filter((a: Appointment) => new Date(a.fecha_hora) > now).length,
+        completed: appointmentsData.filter((a: Appointment) => new Date(a.fecha_hora) <= now).length
       });
 
     } catch (error) {
@@ -95,8 +106,16 @@ const Dashboard = () => {
   const tileContent = ({ date, view }: { date: Date; view: string }) => {
     if (view === 'month') {
       const dateStr = date.toISOString().split('T')[0];
-      const hasAppointment = appointments.some(appointment => appointment.fecha_hora.split('T')[0] === dateStr);
-      return hasAppointment ? <div className="highlight"></div> : null;
+      const hasAppointment = appointments.some(appointment =>
+        appointment.fecha_hora.split('T')[0] === dateStr
+      );
+  
+      if (hasAppointment) {
+        return (
+          <div style={{ width: '100%', height: '40%', backgroundColor: '#FDAC4A' }}>
+          </div>
+        );
+      }
     }
     return null;
   };
@@ -114,6 +133,14 @@ const Dashboard = () => {
     }));
   };
 
+  const getUpcomingAppointments = () => {
+    const now = new Date();
+    return appointments
+      .filter(appointment => new Date(appointment.fecha_hora) > now)
+      .sort((a, b) => new Date(a.fecha_hora).getTime() - new Date(b.fecha_hora).getTime())
+      .slice(0, 3);
+  };
+
   return (
     <div className="p-6 bg-second">
       <h1 className="text-3xl font-bold mb-6 text-orange">Dashboard Médico</h1>
@@ -125,7 +152,6 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <p>Total: {patientStats.total}</p>
-            <p>Nuevos este mes: {patientStats.new}</p>
             <p>Activos: {patientStats.active}</p>
           </CardContent>
         </Card>
@@ -147,9 +173,9 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <ul>
-              {appointments.slice(0, 3).map(appointment => (
+              {getUpcomingAppointments().map(appointment => (
                 <li key={appointment.id_cita}>
-                  {new Date(appointment.fecha_hora).toLocaleDateString()} - {appointment.patientName}
+                  {new Date(appointment.fecha_hora).toLocaleString()} - {appointment.patientName}
                 </li>
               ))}
             </ul>
@@ -198,7 +224,7 @@ const Dashboard = () => {
           <Card>
             <CardContent>
               <ul>
-                {patients.slice(0, 5).map(patient => (
+                {patients.slice(-5).reverse().map(patient => (
                   <li key={patient.id_patient}>{patient.name} {patient.lastname}</li>
                 ))}
               </ul>
@@ -209,7 +235,7 @@ const Dashboard = () => {
           <Card>
             <CardContent>
               <ul>
-                {consultations.slice(0, 5).map(consultation => (
+                {consultations.slice(-5).reverse().map(consultation => (
                   <li key={consultation.id_consulta}>
                     {new Date(consultation.fecha).toLocaleDateString()} - {consultation.motivo}
                   </li>
