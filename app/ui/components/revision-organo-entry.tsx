@@ -15,7 +15,7 @@ const tiposRevision = [
 ];
 
 interface RevisionOrganoEntryProps {
-  revision: RevisionOrgano;
+  revision: RevisionOrgano | null;
 }
 
 const RevisionOrganoEntry: React.FC<RevisionOrganoEntryProps> = ({ revision }) => {
@@ -25,6 +25,14 @@ const RevisionOrganoEntry: React.FC<RevisionOrganoEntryProps> = ({ revision }) =
     const organo = tiposRevision.find(tipo => tipo.id === tipoOrgano);
     return organo ? organo.nombre : 'Órgano no especificado';
   };
+
+  if (!revision) {
+    return (
+      <div className="border rounded-lg p-4 my-4 shadow-lg text-center text-gray-600">
+        No hay registros de revisiones disponibles.
+      </div>
+    );
+  }
 
   return (
     <div className="border rounded-lg p-4 my-4 shadow-lg">
