@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import VitalSignsForm from "@/app/ui/patients/vital-signs-form";
 import ConsultationForm from "@/app/ui/patients/consultation-form";
 import { DiagnosticForm } from "@/app/ui/patients/diagnostic-form";
@@ -8,7 +8,7 @@ import { RecipeForm } from "@/app/ui/patients/recipe-form";
 import { FormData } from "@/app/ui/patients/interfaces";
 
 export default function Page({ params }: { params: { patientId: number } }) {
-  const [formData, setFormData] = useState({
+  const initialFormData: FormData = {
     vitalSigns: {
       temperatura: '',
       presion_arterial_sistolica: '',
@@ -38,13 +38,14 @@ export default function Page({ params }: { params: { patientId: number } }) {
       fecha_receta: '',
       medicamentos_recetados: '',
     }
-  });
+  };
 
+  const [formData, setFormData] = useState<FormData>(initialFormData);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [showTreatment, setShowTreatment] = useState(false);
   const [showRecipe, setShowRecipe] = useState(false);
 
-  const handleChange = (formName: keyof FormData, field: string, value: string) => {
+  const handleChange = (formName: keyof FormData, field: string, value: string | number) => {
     setFormData((prevData) => ({
       ...prevData,
       [formName]: {
@@ -52,6 +53,13 @@ export default function Page({ params }: { params: { patientId: number } }) {
         [field]: value
       }
     }));
+  };
+
+  const resetForm = () => {
+    setFormData(initialFormData);
+    setShowDiagnostic(false);
+    setShowTreatment(false);
+    setShowRecipe(false);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -66,18 +74,38 @@ export default function Page({ params }: { params: { patientId: number } }) {
       historial: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/historiales/`,
       paciente: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/pacientes/${params.patientId}/`,
     };
+
+    console.log('URLs configuradas:', urls);
   
     try {
+      // Convertir los datos de signos vitales
+      const vitalSignsData = {
+        temperatura: parseFloat(formData.vitalSigns.temperatura) || null,
+        presion_arterial_sistolica: parseInt(formData.vitalSigns.presion_arterial_sistolica, 10) || null,
+        presion_arterial_diastolica: parseInt(formData.vitalSigns.presion_arterial_diastolica, 10) || null,
+        frecuencia_cardiaca: parseInt(formData.vitalSigns.frecuencia_cardiaca, 10) || null,
+        frecuencia_respiratoria: parseInt(formData.vitalSigns.frecuencia_respiratoria, 10) || null,
+        peso: parseFloat(formData.vitalSigns.peso) || null,
+        talla: parseFloat(formData.vitalSigns.talla) || null,
+        saturacion_oxigeno: parseFloat(formData.vitalSigns.saturacion_oxigeno) || null
+      };
+
+      console.log('Enviando datos de signos vitales:', vitalSignsData);
       const vitalSignsResponse = await fetch(urls.vitalSigns, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData.vitalSigns),
+        body: JSON.stringify(vitalSignsData),
       });
+      if (!vitalSignsResponse.ok) {
+        console.error('Error en la respuesta de signos vitales:', await vitalSignsResponse.text());
+        throw new Error('Error al guardar los signos vitales');
+      }
       const vitalSignsResult = await vitalSignsResponse.json();
-      console.log('Vital Signs Response:', vitalSignsResult);
+      console.log('Respuesta de signos vitales:', vitalSignsResult);
   
+      console.log('Enviando datos de consulta:', formData.consultation);
       const consultationResponse = await fetch(urls.consultation, {
         method: 'POST',
         headers: {
@@ -85,12 +113,17 @@ export default function Page({ params }: { params: { patientId: number } }) {
         },
         body: JSON.stringify(formData.consultation),
       });
+      if (!consultationResponse.ok) {
+        console.error('Error en la respuesta de consulta:', await consultationResponse.text());
+        throw new Error('Error al guardar la consulta');
+      }
       const consultationResult = await consultationResponse.json();
-      console.log('Consultation Response:', consultationResult);
+      console.log('Respuesta de consulta:', consultationResult);
 
       let diagnosticResult, treatmentResult, recipeResult;
 
       if (showDiagnostic) {
+        console.log('Enviando datos de diagnóstico:', formData.diagnostic);
         const diagnosticResponse = await fetch(urls.diagnostic, {
           method: 'POST',
           headers: {
@@ -98,11 +131,16 @@ export default function Page({ params }: { params: { patientId: number } }) {
           },
           body: JSON.stringify(formData.diagnostic),
         });
+        if (!diagnosticResponse.ok) {
+          console.error('Error en la respuesta de diagnóstico:', await diagnosticResponse.text());
+          throw new Error('Error al guardar el diagnóstico');
+        }
         diagnosticResult = await diagnosticResponse.json();
-        console.log('Diagnostic Response:', diagnosticResult);
+        console.log('Respuesta de diagnóstico:', diagnosticResult);
       }
 
       if (showTreatment) {
+        console.log('Enviando datos de tratamiento:', formData.treatment);
         const treatmentResponse = await fetch(urls.treatment, {
           method: 'POST',
           headers: {
@@ -110,11 +148,16 @@ export default function Page({ params }: { params: { patientId: number } }) {
           },
           body: JSON.stringify(formData.treatment),
         });
+        if (!treatmentResponse.ok) {
+          console.error('Error en la respuesta de tratamiento:', await treatmentResponse.text());
+          throw new Error('Error al guardar el tratamiento');
+        }
         treatmentResult = await treatmentResponse.json();
-        console.log('Treatment Response:', treatmentResult);
+        console.log('Respuesta de tratamiento:', treatmentResult);
       }
 
       if (showRecipe) {
+        console.log('Enviando datos de receta:', formData.recipe);
         const recipeResponse = await fetch(urls.recipe, {
           method: 'POST',
           headers: {
@@ -122,18 +165,27 @@ export default function Page({ params }: { params: { patientId: number } }) {
           },
           body: JSON.stringify(formData.recipe),
         });
+        if (!recipeResponse.ok) {
+          console.error('Error en la respuesta de receta:', await recipeResponse.text());
+          throw new Error('Error al guardar la receta');
+        }
         recipeResult = await recipeResponse.json();
-        console.log('Recipe Response:', recipeResult);
+        console.log('Respuesta de receta:', recipeResult);
       }
 
+      console.log('Obteniendo datos del paciente para ID:', params.patientId);
       const patientResponse = await fetch(urls.paciente, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
+      if (!patientResponse.ok) {
+        console.error('Error en la respuesta del paciente:', await patientResponse.text());
+        throw new Error('Error al obtener los datos del paciente');
+      }
       const patientResult = await patientResponse.json();
-      console.log('Patient Response:', patientResult);
+      console.log('Respuesta del paciente:', patientResult);
 
       const historialData = {
         paciente: patientResult.id_patient,
@@ -144,8 +196,7 @@ export default function Page({ params }: { params: { patientId: number } }) {
         receta: showRecipe ? recipeResult.id_receta : null,
       };
   
-      console.log(JSON.stringify(historialData));
-  
+      console.log('Enviando datos del historial:', historialData);
       const historialResponse = await fetch(urls.historial, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -154,15 +205,17 @@ export default function Page({ params }: { params: { patientId: number } }) {
   
       if (historialResponse.ok) {
         const historialResult = await historialResponse.json();
-        console.log('Historial Response:', historialResult);
+        console.log('Respuesta del historial:', historialResult);
         alert('Datos guardados correctamente');
+        resetForm();  
       } else {
-        alert('Error al guardar datos');
+        console.error('Error en la respuesta del historial:', await historialResponse.text());
+        throw new Error('Error al guardar el historial');
       }
   
     } catch (error) {
-      console.error('Error submitting form data:', error);
-      alert('Error al guardar datos');
+      console.error('Error detallado al enviar datos del formulario:', error);
+      alert('Error al guardar datos: ' + (error instanceof Error ? error.message : 'Error desconocido'));
     }
   };
 
